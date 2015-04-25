@@ -4,7 +4,8 @@ library (ENmisc)
 source ("files.R")
 
 print.single.day <- function (item, date) {
-  data <- read.item.date (item, date)
+  path <- get.item.date.path (item, date)
+  data <- read.item (path)
   
   bpstats <- wtd.boxplot (data$ppu, data$amount)$stats
   plot <- ggplot (data, aes (x = c(1), y = ppu, weight = amount)) +
