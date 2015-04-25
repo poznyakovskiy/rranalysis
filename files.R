@@ -1,5 +1,5 @@
 list.item.files <- function (item) {
-  list.files ("data/raw/", paste ("^", as.character (item), ".+csv$", sep=""))
+  list.files ("data/raw/", paste0 ("^", as.character (item), ".+csv$"))
 }
 
 get.by.date <- function (list, date) {

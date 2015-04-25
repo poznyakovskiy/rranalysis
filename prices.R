@@ -4,7 +4,7 @@ library (ENmisc)
 source ("files.R")
 
 print.single.day <- function (item, date) {
-  data <- read.csv (paste ("data/raw/", get.item.date (item, date), sep=""),
+  data <- read.csv (paste0 ("data/raw/", get.item.date (item, date)),
                     header = FALSE,
                     col.names = c ("name", "location", "amount", "distance", "ppu", "ppu.adjusted"),
                     colClasses = c ("character", "character", "numeric", "numeric", "numeric", "numeric"))
