@@ -4,10 +4,7 @@ library (ENmisc)
 source ("files.R")
 
 print.single.day <- function (item, date) {
-  data <- read.csv (paste0 ("data/raw/", get.item.date (item, date)),
-                    header = FALSE,
-                    col.names = c ("name", "location", "amount", "distance", "ppu", "ppu.adjusted"),
-                    colClasses = c ("character", "character", "numeric", "numeric", "numeric", "numeric"))
+  data <- read.item.date (item, date)
   
   bpstats <- wtd.boxplot (data$ppu, data$amount)$stats
   plot <- ggplot (data, aes (x = c(1), y = ppu, weight = amount)) +
