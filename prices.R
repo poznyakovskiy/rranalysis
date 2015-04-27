@@ -3,7 +3,7 @@ library (ENmisc)
 
 source ("files.R")
 
-print.single.day <- function (item, date) {
+plot.single.day <- function (item, date) {
   path <- get.item.date.path (item, date)
   data <- read.item (path)
   
@@ -12,4 +12,47 @@ print.single.day <- function (item, date) {
     geom_boxplot(outlier.size = 0) +
     coord_cartesian (ylim = c(0, bpstats[5] * 1.05))
   print (plot)
+}
+
+plot.multiple.days <- function (item, date) {
+  data <- item.summary (item, date)
+  
+  plot <- ggplot(data) +
+          geom_ribbon(aes (x = Day, ymin = Lower.Quantile, ymax = Upper.Quantile),
+                      alpha=0.1, color="grey") +
+          geom_line(aes(x=Day, y=Median), color="steelblue", size=2) +
+          annotate ("text", label = good.names$name[item == good.names$id],
+                            x = data$Day[1], y = max (data$Upper.Quantile),
+                            hjust = 0, vjust = 1, fontface = 2, size = 12)
+  
+  print (plot)
+}
+
+price.quantiles <- function (item, date, probs = 0.5) {
+  path <- get.item.date.path (item, date)
+  
+  unname (sapply (path, function (x) {
+    data <- read.item (x)
+    wtd.quantile (data$ppu, weights=data$amount, probs = probs)
+  }))
+}
+
+market.size <- function (item, date) {
+  path <- get.item.date.path (item, date)
+  
+  unname (sapply (path, function (x) {
+    data <- read.item (x)
+    sum (data$amount)
+  }))
+}
+
+item.summary <- function (item, date) {
+ prices <- price.quantiles (item, date, c(0.5, 0.25, 0.75))
+ amounts <- market.size (item, date)
+ dates <- as.character(Sys.Date() + date);
+ 
+ item.data <- data.frame (dates, prices[1,], prices[2,], prices[3,], amounts)
+ colnames(item.data) <- c ("Day", "Median", "Lower.Quantile", "Upper.Quantile", "Amount")
+ item.data$Day <- as.Date (item.data$Day)
+ item.data
 }
