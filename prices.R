@@ -16,14 +16,21 @@ plot.single.day <- function (item, date) {
 
 plot.multiple.days <- function (item, date) {
   data <- item.summary (item, date)
+  names <- goods.names ();
   
-  plot <- ggplot(data) +
+  plot <- ggplot(data) + theme_bw() +
           geom_ribbon(aes (x = Day, ymin = Lower.Quantile, ymax = Upper.Quantile),
                       alpha=0.1, color="grey") +
           geom_line(aes(x=Day, y=Median), color="steelblue", size=2) +
-          annotate ("text", label = good.names$name[item == good.names$id],
+          annotate ("text", label = names$name[item == names$id],
                             x = data$Day[1], y = max (data$Upper.Quantile),
-                            hjust = 0, vjust = 1, fontface = 2, size = 12)
+                            hjust = 0, vjust = 1, fontface = 2, size = 12) +
+          annotate ("text", label = data$Median[1],
+                            x = data$Day[1], y = data$Median[1],
+                            hjust = 0, vjust = -1, color = "steelblue", fontface = 2) +
+          annotate ("text", label = data$Median[length(data$Median)],
+                    x = data$Day[length(data$Day)], y = data$Median[length(data$Median)],
+                    hjust = 1, vjust = -1, color = "steelblue", fontface = 2)
   
   print (plot)
 }

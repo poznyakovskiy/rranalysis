@@ -36,7 +36,7 @@ read.item <- function (path) {
 }
 
 # gets the proper names of the goods
-goods.names () {
+goods.names <- function () {
   read.csv ("goods.csv", header = FALSE,
             col.names = c ("id", "name"),
             colClasses = c ("numeric", "character"))
