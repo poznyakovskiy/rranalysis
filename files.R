@@ -1,6 +1,6 @@
 # lists files for a specific item, across all dates
 list.item.files <- function (dir, item) {
-  list.files (dir, paste0 ("^", as.character (item), ".+csv$"))
+  list.files (dir, paste0 ("^", as.character (item), "_.+csv$"))
 }
 
 # within a file list, finds the file that corresponds to a specific date
