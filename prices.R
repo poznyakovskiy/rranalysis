@@ -40,18 +40,19 @@ print.all.images <- function (date, width, height) {
 }
 
 print.timescale.price <- function (item, date) {
-  names <- goods.names ();
-  print (get.timescale.price (item, date))
+  plot <- get.timescale.price (item, date)
+  print (plot)
 }
 
 print.timescale.amount <- function (item, date) {
-  names <- goods.names ();
-  print (get.timescale.amount (item, date))
+  plot <- get.timescale.amount (item, date)
+  print (plot)
 }
 
 # create timescape price plot but do not print it
 get.timescale.price <- function (item, date) {
   data <- item.summary (item, date)
+  names <- goods.names ();
   
   # scale data for better representation
   factor <- get.scaling.factor (data$Upper.Quantile)
@@ -89,6 +90,7 @@ get.timescale.price <- function (item, date) {
 # create timescale market size plot but do not print it
 get.timescale.amount <- function (item, date) {
   data <- item.summary (item, date)
+  names <- goods.names ();
   
   # scale data for better representation
   factor <- get.scaling.factor (data$Amount)
