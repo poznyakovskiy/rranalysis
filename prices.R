@@ -49,10 +49,62 @@ print.timescale.amount <- function (item, date) {
   print (plot)
 }
 
+print.timescale.density.price <- function (item, date) {
+  names <- goods.names ();
+  data <- item.summary (item, date)
+  
+  total.data <- lapply (date, function (x) {
+    path <- get.item.date.path (item, x)
+    data <- read.item (path)
+    prices <- price.quantiles (item, x, c(0.5, 0.25, 0.75))
+    
+    # leave only the data that is withing the quantiles
+    data <- data[data$ppu <= prices[3,1],]
+    data <- cbind (data, Sys.Date() + x)
+    colnames (data)[7] <- "day"
+    data
+  })
+  total.data <- do.call("rbind", total.data)
+  
+  # scale data for better representation
+  factor <- get.scaling.factor (data$Upper.Quantile)
+  data$Median <- data$Median / factor$value
+  data$Upper.Quantile <- data$Upper.Quantile / factor$value
+  total.data$ppu <- total.data$ppu / factor$value
+  
+  plot <- ggplot(data) + theme_bw() +
+          
+          # density plot
+          geom_point (aes (x=day, y=ppu), data=total.data, alpha = 1/10, size = total.data$amount / 50) +
+          
+          # median
+          geom_line(aes(x=Day, y=Median), color="steelblue", size=2) +
+    
+          annotate ("text", label = names$name[item == names$id],
+                    x = data$Day[1], y = max (data$Upper.Quantile),
+                    hjust = -0.1, vjust = 1, color = "grey", fontface = 2, size = 8) +
+          
+          annotate ("text", label = sprintf ("%.1f", data$Median[1]),
+                    x = data$Day[1], y = data$Median[1],
+                    hjust = -0.1, vjust = -1, color = "steelblue", fontface = 2) +
+          
+          annotate ("text", label = sprintf ("%.1f", data$Median[length(data$Median)]),
+                    x = data$Day[length(data$Day)], y = data$Median[length(data$Median)],
+                    hjust = 1.1, vjust = -1, color = "steelblue", fontface = 2) +
+          
+          scale_x_date(labels = date_format("%d.%m"),
+                       limits = c(data$Day[1], data$Day[length(data$Day)]),
+                       expand = c(0,0)) +
+          
+          labs(x = "", y = paste0 ("Цена, ", factor$name, "R"))
+  
+  print (plot)
+}
+
 # create timescape price plot but do not print it
 get.timescale.price <- function (item, date) {
-  data <- item.summary (item, date)
   names <- goods.names ();
+  data <- item.summary (item, date)
   
   # scale data for better representation
   factor <- get.scaling.factor (data$Upper.Quantile)
@@ -89,8 +141,8 @@ get.timescale.price <- function (item, date) {
 
 # create timescale market size plot but do not print it
 get.timescale.amount <- function (item, date) {
-  data <- item.summary (item, date)
   names <- goods.names ();
+  data <- item.summary (item, date)
   
   # scale data for better representation
   factor <- get.scaling.factor (data$Amount)
