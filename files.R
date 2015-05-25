@@ -5,13 +5,13 @@ library (stringr)
 # in the latter case, they are represented by negative integers
 list.item.files <- function (item, start, end) {
   dir <- "data/raw/"
-  if (start < 0) {
+  if (start <= 0) {
     start.date <- Sys.Date() + start
   } else {
     start.date <- start
   }
   
-  if (end < 0) {
+  if (end <= 0) {
     end.date <- Sys.Date() + end
   } else {
     end.date <- end
