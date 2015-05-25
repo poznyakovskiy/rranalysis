@@ -1,31 +1,34 @@
-# lists files for a specific item, across all dates
-list.item.files <- function (dir, item) {
-  list.files (dir, paste0 ("^", as.character (item), "_.+csv$"))
-}
+library (stringr)
 
-# within a file list, finds the file that corresponds to a specific date
-# 'date' must be a negative integer representing days back from the current day
-# TODO: allow passing an arbitrary date to 'date'
-get.by.date <- function (list, date) {
-  
-  # get current date and substract the required amount of days
-  date <- sapply (date, function (x) { as.character (Sys.Date() + x) })
-  
-  # get date in my format: remove dashes and the two first digits
-  date <- substr (gsub("-", "", date), 3, 8)
-  
-  list [sapply (date, function (x) { grep (x, list) })]
-}
-
-# returns the path to the data file for a specific item and date
-get.item.date.path <- function (item, date) {
+# lists files for a specific item and a specific date range
+# start and end are either dates or offsets to the past
+# in the latter case, they are represented by negative integers
+list.item.files <- function (item, start, end) {
   dir <- "data/raw/"
-  filename <- get.by.date (list.item.files (dir, item), date)
-  if (length (filename) == 0) {
-    filename
+  if (start < 0) {
+    start.date <- Sys.Date() + start
   } else {
-    paste0 (dir, filename)
+    start.date <- start
   }
+  
+  if (end < 0) {
+    end.date <- Sys.Date() + end
+  } else {
+    end.date <- end
+  }
+  
+  list <- paste0 (dir, list.files (dir, paste0 ("^", as.character (item), "_.+csv$")))
+  
+  # returns only the files whose dates match given bounds
+  dates <- dates (list)
+  list[ dates >= start.date & dates <= end.date ]
+}
+
+# extracts available dates from the file list
+dates <- function (path) {
+  unname (sapply (path, function (x) {
+    as.Date (str_extract (x, "_.*_"), "_%y%m%d_")
+  }))
 }
 
 # finds the file corresponding to the specific item and date and reads it
@@ -35,9 +38,51 @@ read.item <- function (path) {
             colClasses = c ("character", "character", "numeric", "numeric", "numeric", "numeric"))
 }
 
+# returns given price quantiles from a set of files
+price.quantiles <- function (path, probs = 0.5) {
+  unname (sapply (path, function (x) {
+    data <- read.item (x)
+    wtd.quantile (data$ppu, weights=data$amount, probs = probs)
+  }))
+}
+
+# returns total amounts from a set of files
+amounts <- function (path) {
+  unname (sapply (path, function (x) {
+    data <- read.item (x)
+    sum (data$amount)
+  }))
+}
+
+# returns summary for a given item by date
+item.summary <- function (item, start, end) {
+  path <- list.item.files (item, start, end)
+  
+  prices <- price.quantiles (path, c(0.5, 0.25, 0.75))
+  amounts <- amounts (path)
+  dates <- dates (path);
+  
+  item.data <- data.frame (dates, prices[1,], prices[2,], prices[3,], amounts)
+  colnames(item.data) <- c ("Day", "Median", "Lower.Quantile", "Upper.Quantile", "Amount")
+  item.data$Day <- as.Date (item.data$Day, origin = "1970-01-01")
+  item.data
+}
+
+# exports summarized data to files
+export.summary <- function (item, start, end) {
+  data <- item.summary (item, start, end)
+  write.csv (item.data, file = paste0 ("data/items/", as.character (item), ".csv"), row.names=FALSE)
+}
+
 # gets the proper names of the goods
 goods.names <- function () {
   read.csv ("goods.csv", header = FALSE,
             col.names = c ("id", "name"),
             colClasses = c ("numeric", "character"))
+}
+
+# gets the proper names of the good with a given id
+goods.name <- function (id) {
+  names <- goods.names ();
+  names$name[id == names$id]
 }
