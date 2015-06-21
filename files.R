@@ -71,7 +71,16 @@ item.summary <- function (item, start, end) {
 # exports summarized data to files
 export.summary <- function (item, start, end) {
   data <- item.summary (item, start, end)
-  write.csv (item.data, file = paste0 ("data/items/", as.character (item), ".csv"), row.names=FALSE)
+  write.csv (data, file = paste0 ("data/items/", as.character (item), ".csv"), row.names=FALSE)
+}
+
+#export summarized data for all items
+export.summary.all <- function (start, end) {
+  id <- goods.names()$id
+  sapply (id, function (x) {
+    export.summary (x, start, end)
+  })
+  "Done"
 }
 
 # gets the proper names of the goods
